@@ -10,7 +10,6 @@ const CategorySchema = new mongoose.Schema(
 
     CategoryDescription: {
       type: String,
-      required: true
     },
 
   },
