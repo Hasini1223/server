@@ -344,23 +344,22 @@ mongoose
      //INSERT supplier payments
      app.post("/addsupplierpayment", async (req, res) => {
       try {
-        const { supplier, orderId, invoiceValue, nelundeniyaCode } = req.body;
+        const { supplier, orderId, invoiceValue } = req.body;
     
-        const existingSupplierPayment = await SupplierPayment.findOne({ supplier, orderId, nelundeniyaCode });
+        let existingSupplierPayment = await SupplierPayment.findOne({ supplier, orderId });
     
         if (existingSupplierPayment) {
           existingSupplierPayment.invoiceValue += parseFloat(invoiceValue);
           await existingSupplierPayment.save();
-    
           res.status(200).json(existingSupplierPayment);
         } else {
-          const newSupplierPayment = await SupplierPayment.create({
+          
+          const newSupplierPayment = new SupplierPayment({
             supplier,
             orderId,
             invoiceValue: parseFloat(invoiceValue),
-            nelundeniyaCode
           });
-    
+          await newSupplierPayment.save();
           res.status(200).json(newSupplierPayment);
         }
       } catch (error) {
@@ -502,14 +501,6 @@ mongoose
       .then(Order => res.json(Order))
       .catch(err=>res.json(err))
     })
-
-    SupplierPayment.collection.dropIndex("orderId_1_supplier_1", function(err, result) {
-      if (err) {
-        console.log("Error dropping index:", err);
-      } else {
-        console.log("Index dropped successfully:", result);
-      }
-    });
 
     app.listen(PORT, () => console.log(`Server is running`));
     //Product.insertMany(dataProduct);

@@ -2,10 +2,6 @@ import mongoose from "mongoose";
 
 const SupplierPaymentSchema = new mongoose.Schema(
   {
-    nelundeniyaCode: {
-      type: String,
-      required: true
-    },
     supplier: {
       type: String,
       required: true
