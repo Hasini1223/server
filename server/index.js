@@ -396,28 +396,8 @@ mongoose
       }
     });
 
-    //updateinvoiceValue
-    app.put("/addsupplierpaymentinvoice", (req, res) => {
-      const { supplier, orderId, nelundeniyaCode, invoiceValue } = req.body;
-      SupplierPayment.findOneAndUpdate(
-          { supplier, orderId, nelundeniyaCode },
-          { invoiceValue },
-          { new: true } 
-      )
-      .then((updatedSupplierPayment) => {
-          if (!updatedSupplierPayment) {
-              return res.status(404).json({ message: "Supplier payment not found" });
-          }
-          res.status(200).json({ message: "Supplier payment updated successfully", updatedSupplierPayment });
-      })
-      .catch((error) => {
-          console.error("Error updating supplier payment:", error);
-          res.status(500).json({ message: "Internal server error" });
-      });
-  });
-  
-    //INSERT payment method++ INTO SupploerPayment TABLE
-    app.put('/supplierpayment/:id', async (req, res) => {
+     //INSERT payment method++ INTO SupploerPayment TABLE
+     app.put('/supplierpayment/:id', async (req, res) => {
       const { id } = req.params;
       try {
         const updatedSupplierPayment = await SupplierPayment.findByIdAndUpdate(id, req.body, {
@@ -433,10 +413,52 @@ mongoose
       }
     });
     
+
+    //updateinvoiceValue
+    app.put("/addsupplierpaymentinvoice", async (req, res) => { 
+      const { supplier, orderId, newValue } = req.body;
+      try {
+        let supplierPayment = await SupplierPayment.findOne({ supplier, orderId });
+        if (!supplierPayment) {
+          supplierPayment = new SupplierPayment({
+            supplier,
+            orderId,
+            invoiceValue
+          });
+        } else {
+          supplierPayment.invoiceValue += newValue;
+        }
+        await supplierPayment.save();
+        res.json({ success: true, message: 'Supplier payment invoice updated successfully' });
+      } catch (error) {
+        console.error('Error updating supplier payment invoice:', error);
+        res.status(500).json({ success: false, message: 'Internal Server Error' });
+      }
+    });
+    
+    //Delete-Update Supplierpayment
+    app.put('/supplierpayment/deletedValue', async (req, res) => {
+      try {
+        const { Supplier, OrderID, deletedValue } = req.body;
+                const supplierPayment = await SupplierPayment.findOneAndUpdate(
+          { Supplier, OrderID },
+          { $inc: { invoiceValue: -deletedValue } }, 
+          { upsert: true, new: true }
+        );
+        
+        res.json({ message: 'Supplier payment updated successfully', supplierPayment });
+      } catch (error) {
+        console.error('Error updating supplier payment:', error);
+        res.status(500).json({ error: 'Internal server error' });
+      }
+    });
+    
+  
+   
     // Delete Supplier Paymenys
-    app.delete("/supplierpayment/:supplier/:orderId/:nelundeniyaCode", (req, res) => {
-      const { supplier, orderId, nelundeniyaCode } = req.params;
-      SupplierPayment.findOneAndDelete({ supplier, orderId, nelundeniyaCode })
+    app.delete("/supplierpayment/:supplier/:orderId", (req, res) => {
+      const { supplier, orderId } = req.params;
+      SupplierPayment.findOneAndDelete({ supplier, orderId })
         .then((deletedSupplierPayment) => {
           if (!deletedSupplierPayment) {
             return res.status(404).json({ message: "SupplierPayment not found" });
