@@ -437,15 +437,21 @@ mongoose
     });
     
     //Delete-Update Supplierpayment
-    app.put('/supplierpayment/deletedValue', async (req, res) => {
+    app.put("/supplierpaymentdeletedupdate", async (req, res) => {
       try {
-        const { Supplier, OrderID, deletedValue } = req.body;
-                const supplierPayment = await SupplierPayment.findOneAndUpdate(
-          { Supplier, OrderID },
-          { $inc: { invoiceValue: -deletedValue } }, 
+        const { supplier, orderId, deletedValue } = req.body;
+        if (!supplier || !orderId || !deletedValue) {
+          return res.status(400).json({ error: 'Missing required fields' });
+        }
+        const supplierPayment = await SupplierPayment.findOneAndUpdate(
+          { supplier, orderId },
+          { $inc: { invoiceValue: -deletedValue } },
           { upsert: true, new: true }
         );
-        
+    
+        if (!supplierPayment) {
+          return res.status(404).json({ error: 'Supplier payment not found' });
+        }
         res.json({ message: 'Supplier payment updated successfully', supplierPayment });
       } catch (error) {
         console.error('Error updating supplier payment:', error);
